@@ -1990,10 +1990,8 @@ __webpack_require__.r(__webpack_exports__);
   mixins: [_shared_FormMixin__WEBPACK_IMPORTED_MODULE_0__.default, _shared_DeleteMixin__WEBPACK_IMPORTED_MODULE_1__.default],
   data: function data() {
     return {
-      'action': '/users/add',
-      'action2': '/users/update',
-      'text': 'User added succesfully',
-      'text2': 'User updated succesfully',
+      action: '',
+      text: '',
       users: [],
       busy: false,
       busy1: false,
@@ -2034,6 +2032,11 @@ __webpack_require__.r(__webpack_exports__);
       this.fields.name = name;
       this.fields.email = email;
       this.fields.photo = photo;
+    },
+    //set action urls and messages
+    beforeSubmit: function beforeSubmit(theaction, themessage) {
+      this.action = theaction;
+      this.text = themessage;
     }
   },
   created: function created() {
@@ -2182,6 +2185,7 @@ __webpack_require__.r(__webpack_exports__);
         text: 'Delete ' + item,
         icon: 'warning',
         type: 'warning',
+        timer: 2000,
         buttons: {
           confirm: {
             text: 'Sure',
@@ -2201,6 +2205,7 @@ __webpack_require__.r(__webpack_exports__);
               icon: 'success',
               text: item + ' has been deleted.',
               type: 'success',
+              timer: 2000,
               buttons: {
                 confirm: {
                   className: 'btn btn-success'
@@ -2219,6 +2224,7 @@ __webpack_require__.r(__webpack_exports__);
                 icon: 'error',
                 text: error.response.data,
                 type: 'failure',
+                timer: 2000,
                 buttons: {
                   confirm: {
                     className: 'btn btn-danger'
@@ -2234,6 +2240,7 @@ __webpack_require__.r(__webpack_exports__);
                 icon: 'error',
                 text: 'An error occurred. Please try again later',
                 type: 'error',
+                timer: 2000,
                 buttons: {
                   confirm: {
                     className: 'btn btn-danger'
@@ -2267,6 +2274,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({
   data: function data() {
     return {
@@ -2276,9 +2285,7 @@ __webpack_require__.r(__webpack_exports__);
       success: false,
       loaded: true,
       action: '',
-      //save action
-      action2: '',
-      //edit action
+      //action url
       text: '',
       redirect: '',
       completed: false,
@@ -2286,8 +2293,116 @@ __webpack_require__.r(__webpack_exports__);
     };
   },
   methods: {
+    //get the file
+    onFileChange: function onFileChange(e) {
+      console.log(e.target.files[0]);
+      this.fields.photo = e.target.files[0];
+    },
+    //submit data with files
+    formSubmit: function formSubmit(e) {
+      var _this$fields$id,
+          _this$fields$name,
+          _this$fields$email,
+          _this = this;
+
+      this.busyWriting = true; //
+
+      e.preventDefault();
+      var currentObj = this;
+      var config = {
+        headers: _defineProperty({
+          'content-type': 'multipart/form-data'
+        }, "content-type", 'application/json')
+      };
+      var formData = new FormData();
+      formData.append('photo', this.fields.photo);
+      formData.append('id', (_this$fields$id = this.fields.id) !== null && _this$fields$id !== void 0 ? _this$fields$id : '');
+      formData.append('name', (_this$fields$name = this.fields.name) !== null && _this$fields$name !== void 0 ? _this$fields$name : '');
+      formData.append('email', (_this$fields$email = this.fields.email) !== null && _this$fields$email !== void 0 ? _this$fields$email : '');
+      axios.post(this.action, formData, config).then(function (response) {
+        currentObj.success = true;
+        _this.busyWriting = false; //
+
+        _this.completed = true;
+        var mtext = _this.text;
+        var back = _this.redirect;
+        swal({
+          title: 'Success',
+          text: mtext,
+          icon: 'success',
+          timer: 2000,
+          type: 'success',
+          buttons: {
+            confirm: {
+              text: 'Close',
+              className: 'btn btn-danger'
+            },
+            cancel: {
+              text: 'Continue',
+              visible: true,
+              className: 'btn btn-info'
+            }
+          }
+        }).then(function (Delete) {
+          if (Delete) {
+            swal.close();
+            $('.modal-backdrop').remove();
+            $('.modal').hide('modal');
+          } else {
+            swal.close();
+          }
+        });
+        swal.close();
+        $('.modal').hide('modal');
+        $('.modal-backdrop').remove();
+      })["catch"](function (error) {
+        if (error.response.status === 422) {
+          _this.busyWriting = false; //
+
+          _this.errors = error.response.data.errors || {};
+        } else if (error.response.status === 400) {
+          _this.busyWriting = false; //
+
+          _this.errors = error.response.data; // start fail
+
+          swal({
+            title: 'Oops!',
+            icon: 'error',
+            text: _this.errors,
+            type: 'failure',
+            buttons: {
+              confirm: {
+                className: 'btn btn-danger'
+              }
+            }
+          }).then(function () {
+            window.location.href = '';
+          }); // end fail
+        } else {
+          _this.busyWriting = false; //
+          // start fail
+
+          swal({
+            title: 'Oops!',
+            icon: 'error',
+            text: 'Failed! An error occurred. Please try again',
+            type: 'failure',
+            buttons: {
+              confirm: {
+                className: 'btn btn-danger'
+              }
+            }
+          }).then(function () {
+            window.location.href = '';
+          }); // end fail
+        }
+
+        console.log(_this.errors);
+      }).bind(this);
+    },
+    //add /edit user
     submit: function submit(theaction) {
-      var _this = this;
+      var _this2 = this;
 
       this.busyWriting = true; //
 
@@ -2306,14 +2421,14 @@ __webpack_require__.r(__webpack_exports__);
 
         axios.post(action, this.fields).then(function (response) {
           // this.fields = {}; //Clear input fields.
-          _this.loaded = true;
-          _this.success = true;
-          _this.busyWriting = false; //
+          _this2.loaded = true;
+          _this2.success = true;
+          _this2.busyWriting = false; //
           //sweet alert with redirect
 
           var mtext = message;
-          var back = _this.redirect;
-          _this.completed = true;
+          var back = _this2.redirect;
+          _this2.completed = true;
           swal({
             title: 'Success',
             text: mtext,
@@ -2338,19 +2453,19 @@ __webpack_require__.r(__webpack_exports__);
             }
           });
         })["catch"](function (error) {
-          _this.loaded = true;
+          _this2.loaded = true;
 
           if (error.response.status === 422) {
-            _this.busyWriting = false;
-            _this.errors = error.response.data.errors || {};
+            _this2.busyWriting = false;
+            _this2.errors = error.response.data.errors || {};
           } else if (error.response.status === 400) {
-            _this.busyWriting = false;
-            _this.errors = error.response.data; // start fail
+            _this2.busyWriting = false;
+            _this2.errors = error.response.data; // start fail
 
             swal({
               title: 'Oops!',
               icon: 'error',
-              text: _this.errors,
+              text: _this2.errors,
               type: 'failure',
               buttons: {
                 confirm: {
@@ -2361,8 +2476,8 @@ __webpack_require__.r(__webpack_exports__);
               window.location.href = '';
             }); // end fail
           } else {
-            _this.errors = error.response.data.errors || {};
-            _this.busyWriting = false; //
+            _this2.errors = error.response.data.errors || {};
+            _this2.busyWriting = false; //
             // start fail
 
             swal({
@@ -34077,7 +34192,15 @@ var render = function() {
                         _vm._v(" "),
                         _c("td", [_vm._v(_vm._s(data.email))]),
                         _vm._v(" "),
-                        _c("td", [_vm._v(_vm._s(data.photo))]),
+                        _c("td", [
+                          _c("img", {
+                            attrs: {
+                              src: data.photo,
+                              width: "70",
+                              height: "70"
+                            }
+                          })
+                        ]),
                         _vm._v(" "),
                         _c("td", [
                           _c(
@@ -34182,11 +34305,14 @@ var render = function() {
                                   _c(
                                     "form",
                                     {
-                                      attrs: { method: "POST" },
+                                      attrs: {
+                                        method: "POST",
+                                        enctype: "multipart/form-data"
+                                      },
                                       on: {
                                         submit: function($event) {
                                           $event.preventDefault()
-                                          return _vm.submit("edit")
+                                          return _vm.formSubmit($event)
                                         }
                                       }
                                     },
@@ -34329,45 +34455,15 @@ var render = function() {
                                               _c("label", [_vm._v(" Photo")]),
                                               _vm._v(" "),
                                               _c("input", {
-                                                directives: [
-                                                  {
-                                                    name: "model",
-                                                    rawName: "v-model",
-                                                    value:
-                                                      _vm.fields.country_code,
-                                                    expression:
-                                                      "fields.country_code"
-                                                  }
-                                                ],
                                                 staticClass: "form-control",
                                                 attrs: {
-                                                  name: "country_code",
-                                                  type: "text",
-                                                  placeholder:
-                                                    "Enter country code",
-                                                  required: ""
+                                                  name: "photo",
+                                                  type: "file"
                                                 },
-                                                domProps: {
-                                                  value: _vm.fields.country_code
-                                                },
-                                                on: {
-                                                  input: function($event) {
-                                                    if (
-                                                      $event.target.composing
-                                                    ) {
-                                                      return
-                                                    }
-                                                    _vm.$set(
-                                                      _vm.fields,
-                                                      "country_code",
-                                                      $event.target.value
-                                                    )
-                                                  }
-                                                }
+                                                on: { change: _vm.onFileChange }
                                               }),
                                               _vm._v(" "),
-                                              _vm.errors &&
-                                              _vm.errors.country_code
+                                              _vm.errors && _vm.errors.photo
                                                 ? _c(
                                                     "div",
                                                     {
@@ -34376,8 +34472,7 @@ var render = function() {
                                                     [
                                                       _vm._v(
                                                         _vm._s(
-                                                          _vm.errors
-                                                            .country_code[0]
+                                                          _vm.errors.photo[0]
                                                         )
                                                       )
                                                     ]
@@ -34411,6 +34506,14 @@ var render = function() {
                                               attrs: {
                                                 type: "submit",
                                                 disabled: _vm.isDisabled
+                                              },
+                                              on: {
+                                                click: function($event) {
+                                                  return _vm.beforeSubmit(
+                                                    "/users/update",
+                                                    "User updated succesfully"
+                                                  )
+                                                }
                                               }
                                             },
                                             [
@@ -34480,11 +34583,11 @@ var render = function() {
             _c(
               "form",
               {
-                attrs: { method: "POST" },
+                attrs: { method: "POST", enctype: "multipart/form-data" },
                 on: {
                   submit: function($event) {
                     $event.preventDefault()
-                    return _vm.submit("add")
+                    return _vm.formSubmit($event)
                   }
                 }
               },
@@ -34565,42 +34668,17 @@ var render = function() {
                   ]),
                   _vm._v(" "),
                   _c("div", { staticClass: "form-group col-md-12" }, [
-                    _c("label", [_vm._v(" Country Code")]),
+                    _c("label", [_vm._v(" Photo")]),
                     _vm._v(" "),
                     _c("input", {
-                      directives: [
-                        {
-                          name: "model",
-                          rawName: "v-model",
-                          value: _vm.fields.country_code,
-                          expression: "fields.country_code"
-                        }
-                      ],
                       staticClass: "form-control",
-                      attrs: {
-                        name: "country_code",
-                        type: "text",
-                        placeholder: "Enter country code",
-                        required: ""
-                      },
-                      domProps: { value: _vm.fields.country_code },
-                      on: {
-                        input: function($event) {
-                          if ($event.target.composing) {
-                            return
-                          }
-                          _vm.$set(
-                            _vm.fields,
-                            "country_code",
-                            $event.target.value
-                          )
-                        }
-                      }
+                      attrs: { name: "photo", type: "file" },
+                      on: { change: _vm.onFileChange }
                     }),
                     _vm._v(" "),
-                    _vm.errors && _vm.errors.country_code
+                    _vm.errors && _vm.errors.photo
                       ? _c("div", { staticClass: "text-danger" }, [
-                          _vm._v(_vm._s(_vm.errors.country_code[0]))
+                          _vm._v(_vm._s(_vm.errors.photo[0]))
                         ])
                       : _vm._e()
                   ])
@@ -34620,7 +34698,15 @@ var render = function() {
                     "button",
                     {
                       staticClass: "btn btn-success",
-                      attrs: { type: "submit", disabled: _vm.isDisabled }
+                      attrs: { type: "submit", disabled: _vm.isDisabled },
+                      on: {
+                        click: function($event) {
+                          return _vm.beforeSubmit(
+                            "/users/add",
+                            "User added succesfully"
+                          )
+                        }
+                      }
                     },
                     [
                       _vm.busyWriting

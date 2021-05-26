@@ -38,7 +38,7 @@
                     <tr v-for="data in users.data" :key="data.id">
                         <td>{{ data.name }}</td>
                         <td>{{ data.email }}</td>
-                        <td>{{ data.photo }}</td>
+                        <td><img :src="data.photo" width="70" height="70"/></td>
                         <td>
                             <button @click="setEditValue(data.id,data.name,data.email,data.photo)" class="btn btn-sm btn-round btn-outline-* btn-info text-white" title="Edit User Detail" data-toggle="modal" :data-target="'#edit'+data.id"><i class="icon-copy fa fa-edit"></i></button>
                             <button @click.prevent="deleteItem('deleteuserpath',data.id)" class="btn btn-sm btn-round btn-outline-* btn-danger" title="Delete"><i class="icon-copy fa fa-trash-o"></i></button>
@@ -51,7 +51,7 @@
                                         <h4 class="modal-title" id="myMediumModalLabel">Edit User Details[ {{ data.name }}]</h4>
                                         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
                                     </div>
-                                    <form method="POST" @submit.prevent="submit('edit')">
+                                    <form method="POST" @submit.prevent="formSubmit"  enctype="multipart/form-data">
                                         <div class="modal-body row">
                                             <div class="form-group col-md-12">
                                             <label> Name</label>
@@ -66,13 +66,13 @@
                                         
                                         <div class="form-group col-md-12">
                                             <label> Photo</label>
-                                            <input class="form-control" name="country_code" v-model="fields.country_code" type="text" placeholder="Enter country code" required>
-                                            <div v-if="errors && errors.country_code" class="text-danger">{{ errors.country_code[0] }}</div>
+                                            <input class="form-control" name="photo" type="file" v-on:change="onFileChange">
+                                            <div v-if="errors && errors.photo" class="text-danger">{{ errors.photo[0] }}</div>
                                         </div>
                                         </div>
                                         <div class="modal-footer">
                                             <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                                            <button type="submit" class="btn btn-primary" :disabled="isDisabled">
+                                            <button type="submit"  @click="beforeSubmit('/users/update','User updated succesfully')" class="btn btn-primary" :disabled="isDisabled">
                                                 <div v-if="busyWriting"><i class="fa fa-refresh fa-spin fa-fw"></i> Saving</div>
                                                 <div v-else> Save</div>
                                             </button>
@@ -101,7 +101,7 @@
                         <h4 class="modal-title" id="myMediumModalLabel">Create User</h4>
                         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
                     </div>
-                    <form method="POST" @submit.prevent="submit('add')">
+                    <form method="POST" @submit.prevent="formSubmit" enctype="multipart/form-data">
                         <div class="modal-body row">
                             <div class="form-group col-md-12">
                                 <label> Name</label>
@@ -115,14 +115,14 @@
                             </div>
                             
                             <div class="form-group col-md-12">
-                                <label> Country Code</label>
-                                <input class="form-control" name="country_code" v-model="fields.country_code" type="text" placeholder="Enter country code" required>
-                                <div v-if="errors && errors.country_code" class="text-danger">{{ errors.country_code[0] }}</div>
+                                <label> Photo</label>
+                                <input class="form-control" name="photo" type="file" v-on:change="onFileChange">
+                                <div v-if="errors && errors.photo" class="text-danger">{{ errors.photo[0] }}</div>
                             </div>
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
-                            <button type="submit" class="btn btn-success" :disabled="isDisabled">
+                            <button type="submit" @click="beforeSubmit('/users/add','User added succesfully')" class="btn btn-success" :disabled="isDisabled">
                                 <div v-if="busyWriting"><i class="fa fa-refresh fa-spin fa-fw"></i> Saving</div>
                                 <div v-else> Save</div>
                             </button>
@@ -142,10 +142,8 @@
         mixins: [ FormMixin, DeleteMixin ],
         data() {
             return {
-            'action': '/users/add',
-            'action2': '/users/update',
-            'text': 'User added succesfully',
-            'text2': 'User updated succesfully',
+            action: '',
+            text: '',
             users: [],
             busy: false,
             busy1: false,
@@ -188,6 +186,11 @@
                 this.fields.name = name;
                 this.fields.email = email;
                 this.fields.photo = photo;
+            },
+            //set action urls and messages
+            beforeSubmit(theaction,themessage){
+                this.action = theaction;
+                this.text = themessage;
             }
         },
         created: function() {

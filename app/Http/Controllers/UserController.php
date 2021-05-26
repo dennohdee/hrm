@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\User;
+use App\Classes\SendSms;
 use Log;
 use Auth;
 
@@ -31,7 +32,7 @@ class UserController extends Controller
     {
         try {
             $users = User::orderByDesc('id')->get();
-            return $users;
+            return ['data'=>$users];
         } catch (\Throwable $th) {
             Log::error($th);
             return response()->json('Failed to load data, Try again later.',500);
@@ -41,11 +42,32 @@ class UserController extends Controller
     //add user
     public function addUser(Request $request)
     {
+        $request->validate([
+            'name'=>'required',
+            'email'=>'required'
+        ]);
         try {
+            //file 
+            if($request->file('photo'))
+            {
+                $extensions = array("png","jpg","jpeg");
+                $result = array($request->file('photo')->getClientOriginalExtension());
+                
+                if(!in_array($result[0],$extensions)){
+                    return back()->with('failure',"File must be of required type ( e.g. .png, .jpg, or .jpeg)");
+                }
+                //upload file
+                $files = $request->file('photo');
+                $destinationPath = 'photos/'; // upload path
+                $file = "photo_".date('YmdHis') . "." . $files->getClientOriginalExtension();
+                $files->move($destinationPath, $file);
+                $imagelink =  \Config::get('app.url').'/'.$destinationPath.$file;
+                
+            }
             $user = new User();
             $user->name = $request->name;
             $user->email = $request->email;
-            $user->photo = $request->photo;
+            $user->photo = $imagelink ?? '';
             $user->save();
             return 'success';
         } catch (\Throwable $th) {
@@ -56,11 +78,33 @@ class UserController extends Controller
     //edit user
     public function editUser(Request $request)
     {
+        $request->validate([
+            'name'=>'required',
+            'email'=>'required'
+        ]);
         try {
+            //file 
+            if($request->file('photo'))
+            {
+                $extensions = array("png","jpg","jpeg");
+                $result = array($request->file('photo')->getClientOriginalExtension());
+                
+                if(!in_array($result[0],$extensions)){
+                    return back()->with('failure',"File must be of required type ( e.g. .png, .jpg, or .jpeg)");
+                }
+                //upload file
+                $files = $request->file('photo');
+                $destinationPath = 'photos/'; // upload path
+                $file = "photo_".date('YmdHis') . "." . $files->getClientOriginalExtension();
+                $files->move($destinationPath, $file);
+                $imagelink =  \Config::get('app.url').'/'.$destinationPath.$file;
+                
+            }
+
             $user = User::findOrFail($request->id);
             $user->name = $request->name;
             $user->email = $request->email;
-            $user->photo = $request->photo;
+            $user->photo = $imagelink ?? $user->photo;
             $user->save();
             return 'success';
         } catch (\Throwable $th) {
@@ -74,6 +118,9 @@ class UserController extends Controller
         try {
             $user = User::findOrFail($id);
             $user->delete();
+            //send sms to Manager that user has been deleted
+            $sms = new SendSms();
+            $sms->sendSms('+254708058225','User '.$user->name." has been deleted");
             return response()->json('success',200);
         } catch (\Throwable $th) {
             Log::error($th);

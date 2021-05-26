@@ -33,6 +33,7 @@ export default {
               text: 'Delete '+item,
               icon: 'warning',
               type: 'warning',
+              timer:2000,
               buttons:{
                 confirm: {
                   text : 'Sure',
@@ -52,6 +53,7 @@ export default {
                   icon: 'success',
                   text: item+' has been deleted.',
                   type: 'success',
+                  timer:2000,
                   buttons : {
                     confirm: {
                       className : 'btn btn-success'                 
@@ -71,6 +73,7 @@ export default {
                   icon: 'error',
                   text: error.response.data,
                   type: 'failure',
+                  timer:2000,
                   buttons : {
                     confirm: {
                       className : 'btn btn-danger'                 
@@ -89,6 +92,7 @@ export default {
                   icon: 'error',
                   text: 'An error occurred. Please try again later',
                   type: 'error',
+                  timer:2000,
                   buttons : {
                     confirm: {
                       className : 'btn btn-danger'                 
