@@ -13,11 +13,6 @@ use Illuminate\Support\Facades\Route;
 | is assigned the "api" middleware group. Enjoy building your API!
 |
 */
+Route::get('/users/get_all', [App\Http\Controllers\UserController::class, 'getAllUsers'])->name('users.get');
 
-Route::middleware('auth')->group( function () {
-    // ====== Products Endpoint =========//
-    Route::post('/products/add', [App\Http\Controllers\ProductController::class, 'addProduct'])->name('products.add');
-    Route::get('/products/get', [App\Http\Controllers\ProductController::class, 'getProducts'])->name('products.get');
-
-});
 
