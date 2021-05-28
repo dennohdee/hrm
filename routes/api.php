@@ -14,5 +14,6 @@ use Illuminate\Support\Facades\Route;
 |
 */
 Route::get('/users/get_all', [App\Http\Controllers\UserController::class, 'getAllUsers'])->name('users.get');
-
-
+Route::any('/users/add', [App\Http\Controllers\UserController::class, 'addUser'])->name('users.add');
+Route::post('/users/update', [App\Http\Controllers\UserController::class, 'editUser'])->name('users.edit');
+Route::get('/users/delete/{id}', [App\Http\Controllers\UserController::class, 'destroy'])->name('users.delete');

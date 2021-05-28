@@ -69,7 +69,7 @@ class UserController extends Controller
             $user->email = $request->email;
             $user->photo = $imagelink ?? '';
             $user->save();
-            return 'success';
+            return response()->json(['success'=>true, 'message'=>'Added successfully!']);
         } catch (\Throwable $th) {
             Log::error($th);
             return response()->json('Failed to add user, Try again later.',400);
